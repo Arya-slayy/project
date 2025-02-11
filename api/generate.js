@@ -1,8 +1,4 @@
 // File: api/generate.js
-export const config = {
-  runtime: 'edge', // Use edge runtime for better performance
-};
-
 export default async function handler(req) {
   try {
     if (req.method !== 'POST') {
@@ -14,13 +10,6 @@ export default async function handler(req) {
 
     const { prompt, mode } = await req.json();
     const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
-
-    if (!HUGGINGFACE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'API key not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
 
     if (mode === 'text') {
       const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-7b', {
@@ -42,7 +31,9 @@ export default async function handler(req) {
       });
 
       const data = await response.json();
-      return new Response(JSON.stringify(data), {
+      // Clean up the text by removing HTML tags
+      const cleanText = data[0]?.generated_text.replace(/<[^>]*>/g, '') || "No response generated.";
+      return new Response(JSON.stringify({ generated_text: cleanText }), {
         headers: { 'Content-Type': 'application/json' },
       });
     } else {
