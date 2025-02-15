@@ -22,8 +22,12 @@ export default async function handler(req) {
     }
 
     if (mode === 'text') {
-      // Add system prompt to encourage proper formatting
-      const enhancedPrompt = `You are a helpful AI assistant. Please provide a direct response without step numbers, language specifications, or special formatting. Here is the user's question: ${prompt}`;
+      // Enhanced system prompt to prevent repetition and encourage direct responses
+      const enhancedPrompt = `You are a helpful AI assistant. Provide a direct and natural response to this request without repeating the question, mentioning steps, or using special formatting. Ignore any word count requirements in the prompt and simply provide a natural response:
+
+${prompt}
+
+Response:`;
 
       const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-7b', {
         method: 'POST',
@@ -53,16 +57,28 @@ export default async function handler(req) {
       
       // Enhanced text cleaning
       if (Array.isArray(data)) {
-        data[0].generated_text = data[0].generated_text
+        let cleanedText = data[0].generated_text
           .replace(/<[^>]*>/g, '')  // Remove XML-like tags
           .replace(/^(Step \d+:|In \w+:)/gm, '')  // Remove step numbers and language specifications
           .replace(/^\d+\.\s*/gm, '')  // Remove numbered lists
-          .replace(/\b(Step|Steps?)(\s+\d+)?:/gi, '') // Remove any remaining step references
+          .replace(/\b(Step|Steps?)(\s+\d+)?:/gi, '') // Remove step references
           .replace(/In (Hindi|English|Spanish|French|German):/gi, '') // Remove language specifications
           .replace(/^\s*[-*]\s*/gm, '') // Remove bullet points
+          .replace(/^(Question|Query|Prompt|Answer|Response):/gi, '') // Remove question/answer markers
+          .replace(/I would like to.*$/gm, '') // Remove prompt repetition
+          .replace(/The paragraph should be.*$/gm, '') // Remove word count requirements
+          .replace(/.*words\.\s*/g, '') // Remove word count mentions
           .replace(/\s+/g, ' ')  // Normalize whitespace
           .replace(/\n{3,}/g, '\n\n')  // Normalize multiple line breaks
           .trim();
+
+        // Remove any remaining prompt repetition at the start
+        const promptWords = prompt.toLowerCase().split(' ').slice(0, 5).join(' ');
+        if (cleanedText.toLowerCase().startsWith(promptWords)) {
+          cleanedText = cleanedText.substring(promptWords.length).trim();
+        }
+
+        data[0].generated_text = cleanedText;
       }
 
       return new Response(JSON.stringify(data), {
