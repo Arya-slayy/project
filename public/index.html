@@ -3,287 +3,512 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Elsa - Magical AI Assistant</title>
+  <title>Nova - Your Creative AI Companion</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
-    /* Theme variables */
-    .theme-ice {
-      --primary: #A1D2F1;
-      --secondary: #E3F4FF;
-      --accent: #7BB7E0;
-      --text: #2C3E50;
-      --background: linear-gradient(135deg, #E3F4FF 0%, #ffffff 100%);
-      --card-bg: rgba(255, 255, 255, 0.95);
-      --input-bg: white;
+    :root {
+      /* Space theme */
+      --space-bg: #0f1729;
+      --space-card: #1a2333;
+      --space-primary: #7c3aed;
+      --space-secondary: #2dd4bf;
+      --space-text: #e2e8f0;
+      --space-muted: #94a3b8;
+      
+      /* Ocean theme */
+      --ocean-bg: #0c4a6e;
+      --ocean-card: #164e63;
+      --ocean-primary: #0ea5e9;
+      --ocean-secondary: #22d3ee;
+      --ocean-text: #e0f2fe;
+      --ocean-muted: #7dd3fc;
+      
+      /* Forest theme */
+      --forest-bg: #064e3b;
+      --forest-card: #065f46;
+      --forest-primary: #10b981;
+      --forest-secondary: #34d399;
+      --forest-text: #d1fae5;
+      --forest-muted: #6ee7b7;
+      
+      /* Current theme (default: space) */
+      --bg: var(--space-bg);
+      --card: var(--space-card);
+      --primary: var(--space-primary);
+      --secondary: var(--space-secondary);
+      --text: var(--space-text);
+      --muted: var(--space-muted);
     }
 
-    .theme-sunset {
-      --primary: #FF9A8B;
-      --secondary: #FFE5E0;
-      --accent: #FF7B6B;
-      --text: #4A3F3F;
-      --background: linear-gradient(135deg, #FFE5E0 0%, #fff1f0 100%);
-      --card-bg: rgba(255, 252, 251, 0.95);
-      --input-bg: white;
-    }
-
-    .theme-forest {
-      --primary: #7FC8A9;
-      --secondary: #D5F5E3;
-      --accent: #5DAE8B;
-      --text: #2C3E50;
-      --background: linear-gradient(135deg, #D5F5E3 0%, #ffffff 100%);
-      --card-bg: rgba(255, 255, 255, 0.95);
-      --input-bg: white;
-    }
-
-    .theme-dark {
-      --primary: #6c5ce7;
-      --secondary: #483D8B;
-      --accent: #a29bfe;
-      --text: #ffffff;
-      --background: linear-gradient(135deg, #2D3436 0%, #1E272E 100%);
-      --card-bg: rgba(45, 52, 54, 0.95);
-      --input-bg: #2D3436;
-    }
-
-    /* Rest of the existing styles */
-    body {
+    * {
       margin: 0;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--background);
-      min-height: 100vh;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
       color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
       transition: all 0.3s ease;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle var(--duration, 1s) infinite var(--delay, 0s);
     }
 
     .container {
-      max-width: 800px;
+      max-width: 1200px;
       margin: 0 auto;
-    }
-
-    /* Theme Switcher */
-    .theme-switcher {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      gap: 10px;
-      background: var(--card-bg);
-      padding: 10px;
-      border-radius: 30px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .theme-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.3s ease;
+      padding: 2rem;
       position: relative;
+      z-index: 1;
     }
 
-    .theme-btn:hover {
-      transform: scale(1.2);
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
     }
 
-    .theme-btn.active::after {
-      content: '✓';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      text-shadow: 0 0 2px rgba(0,0,0,0.5);
+    .logo {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      color: transparent;
+      display: inline-block;
     }
 
-    /* Enhanced existing components */
-    .chat-container {
-      background: var(--card-bg);
-      border-radius: 20px;
-      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .chat-interface {
+      background: var(--card);
+      border-radius: 1rem;
       overflow: hidden;
-      position: relative;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      margin: 2rem auto;
+      max-width: 800px;
       transition: all 0.3s ease;
     }
 
-    .chat-container:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 48px rgba(31, 38, 135, 0.2);
+    .toolbar {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      gap: 1rem;
+    }
+
+    .mode-toggle {
+      display: flex;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 0.5rem;
+      padding: 0.25rem;
+    }
+
+    .mode-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: none;
+      color: var(--muted);
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .mode-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .theme-switcher {
+      margin-left: auto;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .theme-btn {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .theme-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .theme-btn.active {
+      border-color: var(--primary);
+    }
+
+    .input-area {
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 1rem;
     }
 
     textarea {
       width: 100%;
       min-height: 100px;
-      padding: 15px;
-      border: 2px solid var(--secondary);
-      border-radius: 10px;
-      font-size: 1em;
-      resize: vertical;
-      margin-bottom: 15px;
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-      background: var(--input-bg);
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
       color: var(--text);
+      font-size: 1rem;
+      resize: vertical;
+      transition: all 0.2s ease;
     }
 
     textarea:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(161, 210, 241, 0.2);
       outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
     }
 
-    /* Fun animations */
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-      100% { transform: translateY(0px); }
-    }
-
-    .title {
-      animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes sparkle {
-      0% { transform: scale(1) rotate(0deg); }
-      50% { transform: scale(1.2) rotate(180deg); }
-      100% { transform: scale(1) rotate(360deg); }
-    }
-
-    .btn-icon {
-      display: inline-block;
-      animation: sparkle 2s linear infinite;
-    }
-
-    /* Loading animation enhancement */
-    .loader {
-      position: relative;
-      width: 40px;
-      height: 40px;
-      margin: 0 auto;
-    }
-
-    .loader::before,
-    .loader::after {
-      content: '';
-      position: absolute;
+    .generate-btn {
       width: 100%;
-      height: 100%;
+      padding: 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .generate-btn:hover {
+      background: var(--secondary);
+      transform: translateY(-2px);
+    }
+
+    .generate-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result-area {
+      padding: 1.5rem;
+      min-height: 200px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .result-text {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .result-image {
+      max-width: 100%;
+      border-radius: 0.5rem;
+      display: none;
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .loader-icon {
+      display: inline-block;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 3px solid var(--primary);
       border-radius: 50%;
-      background-color: var(--primary);
-      opacity: 0.6;
-      animation: pulse 2s ease-in-out infinite;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
     }
 
-    .loader::after {
-      animation-delay: -1s;
+    .error-message {
+      display: none;
+      padding: 1rem;
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 4px solid #ef4444;
+      color: #ef4444;
+      margin: 1rem;
+      border-radius: 0.5rem;
     }
 
-    @keyframes pulse {
-      0% { transform: scale(0); opacity: 1; }
-      100% { transform: scale(1.5); opacity: 0; }
+    /* Features tooltip */
+    .features-tooltip {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--card);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      max-width: 300px;
+      z-index: 10;
+      display: none;
+    }
+
+    .features-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--primary);
+      color: white;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      z-index: 11;
+    }
+
+    .features-btn:hover + .features-tooltip {
+      display: block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 1rem; }
+      .logo { font-size: 2rem; }
+      .toolbar { flex-wrap: wrap; }
+      .theme-switcher { width: 100%; justify-content: center; margin-top: 1rem; }
     }
   </style>
 </head>
-<body class="theme-ice">
-  <div class="theme-switcher">
-    <button class="theme-btn active" data-theme="ice" style="background: #A1D2F1;" title="Ice Theme"></button>
-    <button class="theme-btn" data-theme="sunset" style="background: #FF9A8B;" title="Sunset Theme"></button>
-    <button class="theme-btn" data-theme="forest" style="background: #7FC8A9;" title="Forest Theme"></button>
-    <button class="theme-btn" data-theme="dark" style="background: #6c5ce7;" title="Dark Theme"></button>
-  </div>
-
-  <!-- Rest of the existing HTML -->
+<body>
+  <div class="stars"></div>
+  
   <div class="container">
-    <div class="header">
-      <h1 class="title">❄️ Elsa ❄️</h1>
-      <p class="subtitle">Your Magical AI Assistant</p>
-    </div>
+    <header class="header">
+      <h1 class="logo">✨ Nova</h1>
+      <p class="subtitle">Your Creative AI Companion</p>
+    </header>
 
-    <div class="chat-container">
-      <div class="mode-selector">
-        <button class="mode-btn active" data-mode="text">Text Magic</button>
-        <button class="mode-btn" data-mode="image">Image Magic</button>
+    <main class="chat-interface">
+      <div class="toolbar">
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="text">
+            <i class="fas fa-pen"></i>
+            Text
+          </button>
+          <button class="mode-btn" data-mode="image">
+            <i class="fas fa-image"></i>
+            Image
+          </button>
+        </div>
+
+        <div class="theme-switcher">
+          <button class="theme-btn active" data-theme="space" style="background: #7c3aed" title="Space Theme"></button>
+          <button class="theme-btn" data-theme="ocean" style="background: #0ea5e9" title="Ocean Theme"></button>
+          <button class="theme-btn" data-theme="forest" style="background: #10b981" title="Forest Theme"></button>
+        </div>
       </div>
 
-      <div class="input-container">
-        <textarea id="prompt" placeholder="Ask me anything or describe an image you'd like me to create..."></textarea>
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea id="prompt" placeholder="Ask me anything or describe an image you'd like to create..."></textarea>
+        </div>
         <button id="generate" class="generate-btn">
-          <span class="btn-text">Create Magic</span>
-          <span class="btn-icon">✨</span>
+          <span class="btn-text">Create</span>
+          <i class="fas fa-sparkles btn-icon"></i>
         </button>
       </div>
 
-      <div class="loader"></div>
+      <div class="loader">
+        <div class="loader-icon"></div>
+        <p class="loader-text"></p>
+      </div>
+
       <div class="error-message"></div>
 
-      <div class="result-container">
+      <div class="result-area">
         <p class="result-text"></p>
         <img class="result-image" alt="Generated image">
       </div>
-    </div>
+    </main>
+  </div>
+
+  <button class="features-btn">
+    <i class="fas fa-lightbulb"></i>
+  </button>
+  <div class="features-tooltip">
+    <h3>Tips:</h3>
+    <ul>
+      <li>Press Ctrl + Enter to generate</li>
+      <li>Try different themes for different vibes</li>
+      <li>Switch between Text and Image modes</li>
+      <li>Be specific in your prompts for better results</li>
+    </ul>
   </div>
 
   <script>
-    // Existing JavaScript
+    // Create animated star background
+    function createStars() {
+      const stars = document.querySelector('.stars');
+      const numStars = 100;
+      
+      for (let i = 0; i < numStars; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        // Random position
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        
+        // Random size
+        const size = `${Math.random() * 3}px`;
+        star.style.width = size;
+        star.style.height = size;
+        
+        // Random animation duration and delay
+        star.style.setProperty('--duration', `${2 + Math.random() * 3}s`);
+        star.style.setProperty('--delay', `${Math.random() * 2}s`);
+        
+        stars.appendChild(star);
+      }
+    }
+
+    // Theme switching
+    const themes = {
+      space: {
+        bg: 'var(--space-bg)',
+        card: 'var(--space-card)',
+        primary: 'var(--space-primary)',
+        secondary: 'var(--space-secondary)',
+        text: 'var(--space-text)',
+        muted: 'var(--space-muted)'
+      },
+      ocean: {
+        bg: 'var(--ocean-bg)',
+        card: 'var(--ocean-card)',
+        primary: 'var(--ocean-primary)',
+        secondary: 'var(--ocean-secondary)',
+        text: 'var(--ocean-text)',
+        muted: 'var(--ocean-muted)'
+      },
+      forest: {
+        bg: 'var(--forest-bg)',
+        card: 'var(--forest-card)',
+        primary: 'var(--forest-primary)',
+        secondary: 'var(--forest-secondary)',
+        text: 'var(--forest-text)',
+        muted: 'var(--forest-muted)'
+      }
+    };
+
+    // Fun loading messages
+    const loadingMessages = [
+      "Consulting the cosmos...",
+      "Gathering stardust...",
+      "Channeling creativity...",
+      "Exploring possibilities...",
+      "Weaving digital dreams..."
+    ];
+
+    // Initialize variables
+    let currentMode = 'text';
     const modeBtns = document.querySelectorAll('.mode-btn');
+    const themeBtns = document.querySelectorAll('.theme-btn');
     const generateBtn = document.getElementById('generate');
     const promptInput = document.getElementById('prompt');
-    const resultText = document.querySelector('.result-text');
+    const const resultText = document.querySelector('.result-text');
     const resultImage = document.querySelector('.result-image');
     const loader = document.querySelector('.loader');
+    const loaderText = document.querySelector('.loader-text');
     const errorMessage = document.querySelector('.error-message');
     const btnText = generateBtn.querySelector('.btn-text');
     const btnIcon = generateBtn.querySelector('.btn-icon');
 
+    // Initialize star background
+    createStars();
+
     // Theme switching functionality
-    const themeBtns = document.querySelectorAll('.theme-btn');
-    
     themeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        // Remove active class from all buttons
+        const theme = btn.dataset.theme;
         themeBtns.forEach(b => b.classList.remove('active'));
-        // Add active class to clicked button
         btn.classList.add('active');
-        // Apply theme
-        document.body.className = `theme-${btn.dataset.theme}`;
         
-        // Update emoji based on theme
-        const title = document.querySelector('.title');
-        const emojis = {
-          'ice': '❄️',
-          'sunset': '🌅',
-          'forest': '🌿',
-          'dark': '🌙'
+        // Apply theme variables
+        const selectedTheme = themes[theme];
+        for (const [property, value] of Object.entries(selectedTheme)) {
+          document.documentElement.style.setProperty(`--${property}`, value);
+        }
+        
+        // Update logo based on theme
+        const logo = document.querySelector('.logo');
+        const themeEmojis = {
+          'space': '✨',
+          'ocean': '🌊',
+          'forest': '🌿'
         };
-        title.textContent = `${emojis[btn.dataset.theme]} Elsa ${emojis[btn.dataset.theme]}`;
+        logo.textContent = `${themeEmojis[theme]} Nova`;
       });
     });
 
-    // Fun loading messages
-    const loadingMessages = [
-      "Brewing magical pixels...",
-      "Gathering stardust...",
-      "Consulting the crystal ball...",
-      "Channeling creative energy...",
-      "Mixing digital potions..."
-    ];
-
-    // Rest of the existing JavaScript...
-    let currentMode = 'text';
-
+    // Mode switching
     modeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         modeBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentMode = btn.dataset.mode;
+        
+        // Update placeholder text
         promptInput.placeholder = currentMode === 'text' 
           ? "Ask me anything..." 
-          : "Describe an image you'd like me to create...";
+          : "Describe an image you'd like to create...";
+        
         clearResults();
       });
     });
@@ -330,6 +555,13 @@
       }
     }
 
+    // Add smooth scrolling to result
+    function scrollToResult() {
+      const resultArea = document.querySelector('.result-area');
+      resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Generate button click handler
     generateBtn.addEventListener('click', async () => {
       const prompt = promptInput.value.trim();
       if (!prompt) {
@@ -341,35 +573,59 @@
       clearResults();
       generateBtn.disabled = true;
       loader.style.display = 'block';
-      btnText.textContent = getRandomLoadingMessage();
-      btnIcon.textContent = '🌟';
+      loaderText.textContent = getRandomLoadingMessage();
+      btnText.textContent = 'Creating...';
+      btnIcon.className = 'fas fa-circle-notch fa-spin';
 
       try {
         if (currentMode === 'text') {
           const generatedText = await generate(prompt, 'text');
           resultText.textContent = generatedText;
+          scrollToResult();
         } else {
           const imageBlob = await generate(prompt, 'image');
           const imageUrl = URL.createObjectURL(imageBlob);
           resultImage.src = imageUrl;
           resultImage.style.display = 'block';
+          resultImage.onload = scrollToResult;
         }
       } catch (error) {
         showError(`Generation failed: ${error.message}`);
       } finally {
         generateBtn.disabled = false;
         loader.style.display = 'none';
-        btnText.textContent = 'Create Magic';
-        btnIcon.textContent = '✨';
+        btnText.textContent = 'Create';
+        btnIcon.className = 'fas fa-sparkles';
       }
     });
 
-    // Add keyboard shortcut
+    // Keyboard shortcuts
     promptInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && e.ctrlKey) {
         generateBtn.click();
       }
     });
+
+    // Add text autosizing
+    promptInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = this.scrollHeight + 'px';
+    });
+
+    // Initialize tooltips
+    const featuresBtn = document.querySelector('.features-btn');
+    const featuresTooltip = document.querySelector('.features-tooltip');
+
+    featuresBtn.addEventListener('mouseenter', () => {
+      featuresTooltip.style.display = 'block';
+    });
+
+    featuresBtn.addEventListener('mouseleave', () => {
+      featuresTooltip.style.display = 'none';
+    });
+
+    // Initialize with default theme
+    document.body.classList.add('theme-space');
   </script>
 </body>
 </html>
