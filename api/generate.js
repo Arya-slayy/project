@@ -22,12 +22,12 @@ export default async function handler(req) {
     }
 
     if (mode === 'text') {
-      // Enhanced system prompt to prevent repetition and encourage direct responses
-      const enhancedPrompt = `You are a helpful AI assistant. Provide a direct and natural response to this request without repeating the question, mentioning steps, or using special formatting. Ignore any word count requirements in the prompt and simply provide a natural response:
+      // Enhanced system prompt for complete responses
+      const enhancedPrompt = `You are a helpful AI assistant. Provide a complete, well-structured response that fully addresses the topic. Keep your response concise and ensure it ends with a proper conclusion. Here's the request:
 
 ${prompt}
 
-Response:`;
+Remember to provide a complete response with a proper ending.`;
 
       const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-7b', {
         method: 'POST',
@@ -38,13 +38,15 @@ Response:`;
         body: JSON.stringify({
           inputs: enhancedPrompt,
           parameters: {
-            max_new_tokens: 250,
+            max_new_tokens: 500,  // Increased token limit
             temperature: 0.7,
             top_p: 0.95,
             do_sample: true,
             return_full_text: false,
             clean_up_tokenization_spaces: true,
-            remove_special_tokens: true
+            remove_special_tokens: true,
+            stop: ["</s>", "\n\n\n"],  // Add stop sequences
+            repetition_penalty: 1.2     // Discourage repetition
           }
         }),
       });
@@ -55,7 +57,6 @@ Response:`;
 
       const data = await response.json();
       
-      // Enhanced text cleaning
       if (Array.isArray(data)) {
         let cleanedText = data[0].generated_text
           .replace(/<[^>]*>/g, '')  // Remove XML-like tags
@@ -76,6 +77,17 @@ Response:`;
         const promptWords = prompt.toLowerCase().split(' ').slice(0, 5).join(' ');
         if (cleanedText.toLowerCase().startsWith(promptWords)) {
           cleanedText = cleanedText.substring(promptWords.length).trim();
+        }
+
+        // Check for and fix abrupt endings
+        if (cleanedText.match(/[a-zA-Z]$/)) {  // If ends with a letter
+          cleanedText = cleanedText.replace(/\s+\w+$/, ''); // Remove last partial word
+          cleanedText += '.'; // Add period
+        }
+
+        // Ensure proper sentence ending
+        if (!cleanedText.match(/[.!?]$/)) {
+          cleanedText += '.';
         }
 
         data[0].generated_text = cleanedText;
