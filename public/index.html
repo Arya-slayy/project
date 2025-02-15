@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Frost AI Assistant</title>
+  <title>Elsa - Magical AI Assistant</title>
   <style>
     :root {
       --primary: #A1D2F1;
       --secondary: #E3F4FF;
       --accent: #7BB7E0;
       --text: #2C3E50;
+      --error: #e74c3c;
+      --success: #2ecc71;
     }
 
     body {
@@ -18,6 +20,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #E3F4FF 0%, #ffffff 100%);
       min-height: 100vh;
+      color: var(--text);
     }
 
     .container {
@@ -35,24 +38,29 @@
       font-size: 2.5em;
       color: var(--text);
       margin: 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
 
     .subtitle {
       color: var(--accent);
       font-size: 1.2em;
+      margin-top: 10px;
     }
 
     .chat-container {
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       border-radius: 20px;
       box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
       overflow: hidden;
       position: relative;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .mode-selector {
       display: flex;
       border-bottom: 2px solid var(--secondary);
+      padding: 0 10px;
     }
 
     .mode-btn {
@@ -64,11 +72,24 @@
       cursor: pointer;
       transition: all 0.3s ease;
       color: var(--text);
+      position: relative;
+      margin: 0 5px;
+      border-radius: 10px 10px 0 0;
     }
 
     .mode-btn.active {
       background: var(--primary);
       color: white;
+    }
+
+    .mode-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary);
     }
 
     .input-container {
@@ -86,6 +107,7 @@
       resize: vertical;
       margin-bottom: 15px;
       box-sizing: border-box;
+      transition: all 0.3s ease;
     }
 
     .generate-btn {
@@ -98,36 +120,23 @@
       font-size: 1.1em;
       cursor: pointer;
       transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .generate-btn:hover {
       background: var(--accent);
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(123, 183, 224, 0.3);
     }
 
     .generate-btn:disabled {
       background: #ccc;
       cursor: not-allowed;
       transform: none;
-    }
-
-    .result-container {
-      padding: 20px;
-      min-height: 100px;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .result-text {
-      white-space: pre-wrap;
-      line-height: 1.5;
-      color: var(--text);
-    }
-
-    .result-image {
-      max-width: 100%;
-      border-radius: 10px;
-      display: none;
+      box-shadow: none;
     }
 
     .loader {
@@ -136,41 +145,67 @@
       padding: 20px;
     }
 
+    .loader::after {
+      content: '';
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--primary);
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+    }
+
     .error-message {
-      color: #e74c3c;
-      padding: 10px;
+      color: var(--error);
+      padding: 12px;
       text-align: center;
       display: none;
       margin: 10px;
-      background: #ffe6e6;
-      border-radius: 5px;
+      background: #fff5f5;
+      border-radius: 8px;
+      border-left: 4px solid var(--error);
+    }
+
+    .result-container {
+      padding: 20px;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: #fafafa;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .result-text {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: var(--text);
+      margin: 0;
+      font-size: 1.1em;
+    }
+
+    .result-image {
+      max-width: 100%;
+      border-radius: 10px;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Add smooth transitions */
-    .mode-btn, .generate-btn, textarea {
-      transition: all 0.3s ease;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    textarea:focus {
-      border-color: var(--accent);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(123, 183, 224, 0.2);
-    }
-
-    /* Add some hover effects */
-    .mode-btn:hover:not(.active) {
-      background: var(--secondary);
+    /* Responsive improvements */
+    @media (max-width: 600px) {
+      .container { padding: 10px; }
+      .title { font-size: 2em; }
+      .mode-btn { font-size: 1em; padding: 12px; }
+      .generate-btn { padding: 12px; }
     }
   </style>
 </head>
@@ -189,10 +224,13 @@
 
       <div class="input-container">
         <textarea id="prompt" placeholder="Ask me anything or describe an image you'd like me to create..."></textarea>
-        <button id="generate" class="generate-btn">Create Magic ✨</button>
+        <button id="generate" class="generate-btn">
+          <span class="btn-text">Create Magic</span>
+          <span class="btn-icon">✨</span>
+        </button>
       </div>
 
-      <div class="loader">Creating something special... ❄️</div>
+      <div class="loader"></div>
       <div class="error-message"></div>
 
       <div class="result-container">
@@ -210,6 +248,8 @@
     const resultImage = document.querySelector('.result-image');
     const loader = document.querySelector('.loader');
     const errorMessage = document.querySelector('.error-message');
+    const btnText = generateBtn.querySelector('.btn-text');
+    const btnIcon = generateBtn.querySelector('.btn-icon');
 
     let currentMode = 'text';
 
@@ -234,7 +274,15 @@
     function showError(message) {
       errorMessage.textContent = message;
       errorMessage.style.display = 'block';
-      console.error('Error:', message);
+      errorMessage.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function formatResponse(text) {
+      // Remove any XML-like tags and clean up the text
+      return text
+        .replace(/<[^>]*>/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
     }
 
     async function generate(prompt, mode) {
@@ -254,7 +302,8 @@
 
         if (mode === 'text') {
           const data = await response.json();
-          return data[0]?.generated_text || data.generated_text || "No response generated.";
+          const text = data[0]?.generated_text || data.generated_text || "No response generated.";
+          return formatResponse(text);
         } else {
           return response.blob();
         }
@@ -267,12 +316,15 @@
       const prompt = promptInput.value.trim();
       if (!prompt) {
         showError('Please enter a prompt first.');
+        promptInput.focus();
         return;
       }
 
       clearResults();
       generateBtn.disabled = true;
       loader.style.display = 'block';
+      btnText.textContent = 'Creating Magic';
+      btnIcon.textContent = '🌟';
 
       try {
         if (currentMode === 'text') {
@@ -289,6 +341,15 @@
       } finally {
         generateBtn.disabled = false;
         loader.style.display = 'none';
+        btnText.textContent = 'Create Magic';
+        btnIcon.textContent = '✨';
+      }
+    });
+
+    // Add keyboard shortcut
+    promptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        generateBtn.click();
       }
     });
   </script>
