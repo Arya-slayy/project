@@ -22,12 +22,12 @@ export default async function handler(req) {
     }
 
     if (mode === 'text') {
-      // Enhanced system prompt for complete responses
-      const enhancedPrompt = `You are a helpful AI assistant. Provide a complete, well-structured response that fully addresses the topic. Keep your response concise and ensure it ends with a proper conclusion. Here's the request:
+      // Enhanced system prompt to get direct content
+      const enhancedPrompt = `You are a helpful AI assistant. Provide a direct response about the topic. Do not give examples, instructions, or meta-commentary about how to write. Simply write the actual content requested. Here is the topic:
 
 ${prompt}
 
-Remember to provide a complete response with a proper ending.`;
+Remember: Give the actual content only, no meta-commentary or instructions.`;
 
       const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-7b', {
         method: 'POST',
@@ -38,15 +38,15 @@ Remember to provide a complete response with a proper ending.`;
         body: JSON.stringify({
           inputs: enhancedPrompt,
           parameters: {
-            max_new_tokens: 500,  // Increased token limit
+            max_new_tokens: 500,
             temperature: 0.7,
             top_p: 0.95,
             do_sample: true,
             return_full_text: false,
             clean_up_tokenization_spaces: true,
             remove_special_tokens: true,
-            stop: ["</s>", "\n\n\n"],  // Add stop sequences
-            repetition_penalty: 1.2     // Discourage repetition
+            stop: ["</s>", "\n\n\n"],
+            repetition_penalty: 1.2
           }
         }),
       });
@@ -59,18 +59,31 @@ Remember to provide a complete response with a proper ending.`;
       
       if (Array.isArray(data)) {
         let cleanedText = data[0].generated_text
-          .replace(/<[^>]*>/g, '')  // Remove XML-like tags
-          .replace(/^(Step \d+:|In \w+:)/gm, '')  // Remove step numbers and language specifications
-          .replace(/^\d+\.\s*/gm, '')  // Remove numbered lists
-          .replace(/\b(Step|Steps?)(\s+\d+)?:/gi, '') // Remove step references
-          .replace(/In (Hindi|English|Spanish|French|German):/gi, '') // Remove language specifications
-          .replace(/^\s*[-*]\s*/gm, '') // Remove bullet points
-          .replace(/^(Question|Query|Prompt|Answer|Response):/gi, '') // Remove question/answer markers
-          .replace(/I would like to.*$/gm, '') // Remove prompt repetition
-          .replace(/The paragraph should be.*$/gm, '') // Remove word count requirements
-          .replace(/.*words\.\s*/g, '') // Remove word count mentions
-          .replace(/\s+/g, ' ')  // Normalize whitespace
-          .replace(/\n{3,}/g, '\n\n')  // Normalize multiple line breaks
+          // Remove meta-commentary and instructions
+          .replace(/^(Here is|Below is|This is|Following is).*example.*\n?/gi, '')
+          .replace(/^(Here's|Below is|This is|Following is).*response.*\n?/gi, '')
+          .replace(/Note how.*\n?/gi, '')
+          .replace(/When writing.*\n?/gi, '')
+          .replace(/Your (essay|response|answer|paragraph) should.*\n?/gi, '')
+          .replace(/The (essay|response|answer|paragraph) should.*\n?/gi, '')
+          .replace(/You (can|should|must|need to).*\n?/gi, '')
+          .replace(/Let('s| us) write.*\n?/gi, '')
+          .replace(/^[a-z]\)\s.*\n?/gi, '') // Remove letter prefixes like "a)" or "b)"
+          .replace(/For example.*\n?/gi, '')
+          .replace(/Example:.*\n?/gi, '')
+          // Standard cleanup
+          .replace(/<[^>]*>/g, '')
+          .replace(/^(Step \d+:|In \w+:)/gm, '')
+          .replace(/^\d+\.\s*/gm, '')
+          .replace(/\b(Step|Steps?)(\s+\d+)?:/gi, '')
+          .replace(/In (Hindi|English|Spanish|French|German):/gi, '')
+          .replace(/^\s*[-*]\s*/gm, '')
+          .replace(/^(Question|Query|Prompt|Answer|Response):/gi, '')
+          .replace(/I would like to.*$/gm, '')
+          .replace(/The paragraph should be.*$/gm, '')
+          .replace(/.*words\.\s*/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(/\n{3,}/g, '\n\n')
           .trim();
 
         // Remove any remaining prompt repetition at the start
@@ -80,9 +93,9 @@ Remember to provide a complete response with a proper ending.`;
         }
 
         // Check for and fix abrupt endings
-        if (cleanedText.match(/[a-zA-Z]$/)) {  // If ends with a letter
-          cleanedText = cleanedText.replace(/\s+\w+$/, ''); // Remove last partial word
-          cleanedText += '.'; // Add period
+        if (cleanedText.match(/[a-zA-Z]$/)) {
+          cleanedText = cleanedText.replace(/\s+\w+$/, '');
+          cleanedText += '.';
         }
 
         // Ensure proper sentence ending
