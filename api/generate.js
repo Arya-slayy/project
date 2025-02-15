@@ -22,7 +22,8 @@ export default async function handler(req) {
     }
 
     if (mode === 'text') {
-      const enhancedPrompt = `You are a helpful assistant. Please provide a direct response about: ${prompt}`;
+      // Enhanced prompt to encourage narrative format
+      const enhancedPrompt = `You are a creative storyteller. Write a flowing narrative response about: ${prompt}. Tell the story naturally, without using steps, numbers, or question-answer format.`;
 
       const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-7b', {
         method: 'POST',
@@ -50,12 +51,27 @@ export default async function handler(req) {
       
       if (Array.isArray(data) && data[0]?.generated_text) {
         let cleanedText = data[0].generated_text
+          // Remove step patterns
+          .replace(/Step \d+\/\d+/g, '')
+          .replace(/^\d+[\.)]/gm, '')
+          // Remove Q&A patterns
+          .replace(/^Q:|^A:/gm, '')
+          .replace(/^Question:|^Answer:/gm, '')
+          // Remove other formatting
+          .replace(/^[-*•]/gm, '')
           .replace(/^(Here is|Below is|This is).*(example|response).*\n/gi, '')
-          .replace(/^[a-z]\)\s/gi, '')
-          .replace(/\b(Step|Steps?)(\s+\d+)?:/gi, '')
           .replace(/In (Hindi|English|Spanish|French|German):/gi, '')
-          .replace(/^(Question|Query|Prompt|Answer|Response):/gi, '')
+          // Clean up whitespace
+          .replace(/\n\s*\n/g, '\n')
+          .replace(/\s+/g, ' ')
           .trim();
+
+        // Combine fragmented sentences
+        cleanedText = cleanedText
+          .split(/\n/)
+          .filter(line => line.trim().length > 0)
+          .map(line => line.trim())
+          .join(' ');
 
         // Ensure proper ending
         if (!cleanedText.match(/[.!?]$/)) {
