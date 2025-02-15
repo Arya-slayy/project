@@ -22,6 +22,9 @@ export default async function handler(req) {
     }
 
     if (mode === 'text') {
+      // Add system prompt to encourage proper formatting
+      const enhancedPrompt = `You are a helpful AI assistant. Please provide a direct response without step numbers, language specifications, or special formatting. Here is the user's question: ${prompt}`;
+
       const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-7b', {
         method: 'POST',
         headers: {
@@ -29,7 +32,7 @@ export default async function handler(req) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          inputs: prompt,
+          inputs: enhancedPrompt,
           parameters: {
             max_new_tokens: 250,
             temperature: 0.7,
@@ -48,11 +51,17 @@ export default async function handler(req) {
 
       const data = await response.json();
       
-      // Clean up the response
+      // Enhanced text cleaning
       if (Array.isArray(data)) {
         data[0].generated_text = data[0].generated_text
           .replace(/<[^>]*>/g, '')  // Remove XML-like tags
-          .replace(/\s+/g, ' ')     // Normalize whitespace
+          .replace(/^(Step \d+:|In \w+:)/gm, '')  // Remove step numbers and language specifications
+          .replace(/^\d+\.\s*/gm, '')  // Remove numbered lists
+          .replace(/\b(Step|Steps?)(\s+\d+)?:/gi, '') // Remove any remaining step references
+          .replace(/In (Hindi|English|Spanish|French|German):/gi, '') // Remove language specifications
+          .replace(/^\s*[-*]\s*/gm, '') // Remove bullet points
+          .replace(/\s+/g, ' ')  // Normalize whitespace
+          .replace(/\n{3,}/g, '\n\n')  // Normalize multiple line breaks
           .trim();
       }
 
