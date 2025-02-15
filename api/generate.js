@@ -22,12 +22,7 @@ export default async function handler(req) {
     }
 
     if (mode === 'text') {
-      // Enhanced system prompt to get direct content
-      const enhancedPrompt = `You are a helpful AI assistant. Provide a direct response about the topic. Do not give examples, instructions, or meta-commentary about how to write. Simply write the actual content requested. Here is the topic:
-
-${prompt}
-
-Remember: Give the actual content only, no meta-commentary or instructions.`;
+      const enhancedPrompt = `You are a helpful assistant. Please provide a direct response about: ${prompt}`;
 
       const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-7b', {
         method: 'POST',
@@ -42,11 +37,7 @@ Remember: Give the actual content only, no meta-commentary or instructions.`;
             temperature: 0.7,
             top_p: 0.95,
             do_sample: true,
-            return_full_text: false,
-            clean_up_tokenization_spaces: true,
-            remove_special_tokens: true,
-            stop: ["</s>", "\n\n\n"],
-            repetition_penalty: 1.2
+            return_full_text: false
           }
         }),
       });
@@ -57,48 +48,16 @@ Remember: Give the actual content only, no meta-commentary or instructions.`;
 
       const data = await response.json();
       
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data[0]?.generated_text) {
         let cleanedText = data[0].generated_text
-          // Remove meta-commentary and instructions
-          .replace(/^(Here is|Below is|This is|Following is).*example.*\n?/gi, '')
-          .replace(/^(Here's|Below is|This is|Following is).*response.*\n?/gi, '')
-          .replace(/Note how.*\n?/gi, '')
-          .replace(/When writing.*\n?/gi, '')
-          .replace(/Your (essay|response|answer|paragraph) should.*\n?/gi, '')
-          .replace(/The (essay|response|answer|paragraph) should.*\n?/gi, '')
-          .replace(/You (can|should|must|need to).*\n?/gi, '')
-          .replace(/Let('s| us) write.*\n?/gi, '')
-          .replace(/^[a-z]\)\s.*\n?/gi, '') // Remove letter prefixes like "a)" or "b)"
-          .replace(/For example.*\n?/gi, '')
-          .replace(/Example:.*\n?/gi, '')
-          // Standard cleanup
-          .replace(/<[^>]*>/g, '')
-          .replace(/^(Step \d+:|In \w+:)/gm, '')
-          .replace(/^\d+\.\s*/gm, '')
+          .replace(/^(Here is|Below is|This is).*(example|response).*\n/gi, '')
+          .replace(/^[a-z]\)\s/gi, '')
           .replace(/\b(Step|Steps?)(\s+\d+)?:/gi, '')
           .replace(/In (Hindi|English|Spanish|French|German):/gi, '')
-          .replace(/^\s*[-*]\s*/gm, '')
           .replace(/^(Question|Query|Prompt|Answer|Response):/gi, '')
-          .replace(/I would like to.*$/gm, '')
-          .replace(/The paragraph should be.*$/gm, '')
-          .replace(/.*words\.\s*/g, '')
-          .replace(/\s+/g, ' ')
-          .replace(/\n{3,}/g, '\n\n')
           .trim();
 
-        // Remove any remaining prompt repetition at the start
-        const promptWords = prompt.toLowerCase().split(' ').slice(0, 5).join(' ');
-        if (cleanedText.toLowerCase().startsWith(promptWords)) {
-          cleanedText = cleanedText.substring(promptWords.length).trim();
-        }
-
-        // Check for and fix abrupt endings
-        if (cleanedText.match(/[a-zA-Z]$/)) {
-          cleanedText = cleanedText.replace(/\s+\w+$/, '');
-          cleanedText += '.';
-        }
-
-        // Ensure proper sentence ending
+        // Ensure proper ending
         if (!cleanedText.match(/[.!?]$/)) {
           cleanedText += '.';
         }
